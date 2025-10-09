@@ -76,8 +76,17 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Don't attempt token refresh for login requests or if already retried
+    const isLoginRequest = originalRequest.url?.includes("/auth/login");
+    const isRefreshRequest = originalRequest.url?.includes("/auth/refresh");
+
     // If error is 401 and we haven't already tried to refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isLoginRequest &&
+      !isRefreshRequest
+    ) {
       if (isRefreshing) {
         // If already refreshing, queue this request
         return new Promise((resolve, reject) => {
@@ -99,7 +108,10 @@ api.interceptors.response.use(
 
       if (!refreshToken) {
         clearTokens();
-        window.location.href = "/login";
+        // Use React Router navigation instead of window.location.href
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
         return Promise.reject(error);
       }
 
@@ -123,7 +135,10 @@ api.interceptors.response.use(
         // Refresh failed, clear tokens and redirect to login
         processQueue(refreshError, null);
         clearTokens();
-        window.location.href = "/login";
+        // Use React Router navigation instead of window.location.href
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

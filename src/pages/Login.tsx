@@ -35,9 +35,16 @@ const Login: React.FC = () => {
 
     try {
       await login({ username, password });
+      // Only navigate on successful login
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Login failed. Please check your credentials.");
+      // Set error message and keep user on login page
+      const errorMessage =
+        err.response?.data?.error ||
+        err.message ||
+        "Login failed. Please check your credentials.";
+      setError(errorMessage);
+      // Don't navigate away - let user try again
     } finally {
       setLoading(false);
     }
@@ -177,7 +184,10 @@ const Login: React.FC = () => {
                           id="username"
                           type="text"
                           value={username}
-                          onChange={(e) => setUsername(e.target.value)}
+                          onChange={(e) => {
+                            setUsername(e.target.value);
+                            if (error) setError(""); // Clear error when user starts typing
+                          }}
                           required
                           className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary-600 focus:border-primary-600 transition-all bg-gray-50 focus:bg-white placeholder:text-gray-400 text-sm lg:text-[0.95rem]"
                           placeholder="Enter your username here"
@@ -202,7 +212,10 @@ const Login: React.FC = () => {
                           id="password"
                           type={showPassword ? "text" : "password"}
                           value={password}
-                          onChange={(e) => setPassword(e.target.value)}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            if (error) setError(""); // Clear error when user starts typing
+                          }}
                           required
                           className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary-600 focus:border-primary-600 transition-all bg-gray-50 focus:bg-white placeholder:text-gray-400 text-sm lg:text-[0.95rem]"
                           placeholder="Enter your password"
